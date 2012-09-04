@@ -145,6 +145,10 @@ int iHotSpotY=160;					// y-pos of hotspot on screen for doubleclick exit
 int iUseLogging=0;					// enable logging to file and socket
 BOOL bDebugMode=FALSE;				// disable SetTopWindow, enables you to view background
 
+BOOL bRebootExt=FALSE;				// use external app instead of direct warmboot
+TCHAR szRebootExtApp[MAX_PATH]=L"\\windows\\fexplore.exe";	//external app to start instead of warmboot
+TCHAR szRebootExtParms[MAX_PATH]=L"\\My Documents";	// args for external 'warmboot' application
+
 RECT theRect; //store screen size
 
 bool foundSetupWindow=false;
@@ -172,7 +176,29 @@ LRESULT CALLBACK	Password		(HWND, UINT, WPARAM, LPARAM);
 
 //======================================================================================================
 BOOL DoReboot(){
-	return KernelIoControl(IOCTL_HAL_REBOOT, NULL, 0, NULL, 0, NULL);
+	if(!bRebootExt)
+		return KernelIoControl(IOCTL_HAL_REBOOT, NULL, 0, NULL, 0, NULL);
+	else{
+		if(szRebootExtApp!=NULL){
+			TCHAR str[MAX_PATH];
+			PROCESS_INFORMATION pi;
+			if(CreateProcess(szRebootExtApp, szRebootExtParms, NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi)==0){
+				wsprintf(str, L"CreateProcess ('%s'/'%s') failed with 0x%08x\r\n", szRebootExtApp, szRebootExtParms, GetLastError());
+				nclog(str);
+				return FALSE;
+			}
+			else{
+
+				wsprintf(str, L"CreateProcess ('%s'/'%s') OK. pid=0x%08x\r\n", szRebootExtApp, szRebootExtParms, pi.dwProcessId);
+				CloseHandle(pi.hThread);
+				CloseHandle(pi.hProcess);
+				nclog(str);
+				return TRUE;
+			}
+		}
+		else //szRebootExtApp!=NULL
+			return FALSE;
+	}
 }
 
 void ReadRegistry(void)
@@ -380,6 +406,43 @@ void ReadRegistry(void)
 	}
 	else
 		bDebugMode = FALSE;
+
+	//RebootExt
+	dwVal=0;
+	if(RegReadDword(L"RebootExt", &dwVal)==ERROR_SUCCESS)
+	{
+		if(dwVal==0)
+			bRebootExt = FALSE;
+		else
+			bRebootExt = TRUE;
+	}
+	else
+		bRebootExt = FALSE;
+	nclog(L"iLock5: RebootExt=%i\r\n", bRebootExt);
+
+	//RebootExtApp
+	TCHAR szTemp[MAX_PATH];
+	RegReadStr(L"RebootExtApp", szTemp);
+	if (wcslen(szTemp)==0){
+		*szRebootExtApp=NULL;
+		nclog(L"iLock5: RebootExtApp=NULL\r\n");
+	}
+	else{
+		wsprintf(szRebootExtApp, L"%s", szTemp);
+		nclog(L"iLock5: RebootExtApp='%s'\r\n", szRebootExtApp);
+	}
+
+	//RebootExtParms
+	wsprintf(szTemp, L"");
+	RegReadStr(L"RebootExtParms", szTemp);
+	if (wcslen(szTemp)==0){
+		*szRebootExtParms=NULL;
+		nclog(L"iLock5: RebootExtParms=NULL\r\n");
+	}
+	else{
+		wsprintf(szRebootExtParms, L"%s", szTemp);
+		nclog(L"iLock5: RebootExtParms='%s'\r\n", szRebootExtParms);
+	}
 
 #ifdef DEBUG
 	TIMER4COUNT=3;
