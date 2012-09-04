@@ -1,6 +1,13 @@
 REGEDIT4
 
 [HKEY_LOCAL_MACHINE\Software\Intermec\iLock]
+"RebootExt"=dword:00000000
+;			1 = enable use of external app instead of warmboot
+;			0 = do a normal warmboot
+"RebootExtApp"="\Windows\fexplore.exe"
+;			name of external app to use for warmboot
+"RebootExtParms"=""
+;			arguments to use to launch external app
 "DebugMode"=dword:00000000
 ;			if 1, SetTopWindow without function
 ;			if 0, SetTopWindow peridically brings iLock to Top (default)
