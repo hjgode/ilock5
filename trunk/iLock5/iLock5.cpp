@@ -411,10 +411,10 @@ void ReadRegistry(void)
 	dwVal=0;
 	if(RegReadDword(L"RebootExt", &dwVal)==ERROR_SUCCESS)
 	{
-		if(dwVal==0)
-			bRebootExt = FALSE;
-		else
+		if(dwVal==1)
 			bRebootExt = TRUE;
+		else
+			bRebootExt = FALSE;
 	}
 	else
 		bRebootExt = FALSE;
