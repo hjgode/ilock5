@@ -15,7 +15,7 @@
 #include "registry.h"
 #include "nclog.h"
 
-#pragma comment (user , "version 5.2.0.2")	//see also iLock5ppc.rc !
+#pragma comment (user , "version 5.3.0.0")	//see also iLock5ppc.rc !
 
 //fix memory problem on WM5 and later, see http://social.msdn.microsoft.com/forums/en-US/vssmartdevicesnative/thread/e91d845d-d51e-45ad-8acf-737e832c20d0/
 #ifndef TH32CS_SNAPNOHEAPS
