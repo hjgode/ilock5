@@ -335,7 +335,7 @@ void ReadRegistry(void)
 	dwVal=120;
 	if(RegReadDword(L"HotSpotX", &dwVal)==ERROR_SUCCESS)
 	{
-		if(dwVal>10 && dwVal<screenXmax)
+		if(dwVal>10 && dwVal<(DWORD)screenXmax)
 			iHotSpotX=dwVal;
 		else
 			iHotSpotX=screenXmax/2;
@@ -347,7 +347,7 @@ void ReadRegistry(void)
 	dwVal=160;
 	if(RegReadDword(L"HotSpotY", &dwVal)==ERROR_SUCCESS)
 	{
-		if(dwVal>10 && dwVal<screenYmax)
+		if(dwVal>10 && dwVal<(DWORD)screenYmax)
 			iHotSpotY=dwVal;
 		else
 			iHotSpotY=screenYmax/2;
@@ -464,11 +464,29 @@ DWORD WINAPI watchdogThread(LPVOID param){
 	return 0;
 }
 
+//######### wait for API
+#define SH_GDI 16
+#define SH_WMGR 17
+#define SH_SHELL 21
+// IsAPIReady tells whether the specified API set has been registered
+extern "C" BOOL IsAPIReady(DWORD hAPI);
+void waitforAPIready(){
+	do{
+		Sleep(1000);
+		DEBUGMSG(1, (L"Waiting for API ready\n"));
+		//repeat until all are true;
+	}while( !IsAPIReady(SH_WMGR) && !IsAPIReady(SH_GDI) && !IsAPIReady(SH_SHELL));
+}
+//######### end wait for API
+
 int WINAPI WinMain(HINSTANCE hInstance,
                    HINSTANCE hPrevInstance,
                    LPTSTR    lpCmdLine,
                    int       nCmdShow)
 {
+	//block until APIs are ready
+	waitforAPIready();
+
 	ReadRegistry();
 	if(iUseLogging==1)
 		nclogEnable(TRUE);
@@ -860,8 +878,9 @@ LRESULT ListProcesses(HWND hList)
 //======================================================================
 BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 {
-	bool run = (BOOL)lParam;
-	if (!run)
+	DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
+	LONG_PTR run = lParam;	//change
+	if (run==0)
 		return false;
 	TCHAR caption[MAX_PATH];
 	TCHAR *setupwindowtext = L"Setup";
@@ -880,6 +899,7 @@ BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 // Look for windows starting with "Installing... or "Setup ..." and let them come to front
 int ShowInstallers()
 {
+	DEBUGMSG(1, (L"ShowInstallers()...\n"));
 	bool run=true;
 	EnumWindows(procEnumWindows, run);
 	if (foundSetupWindow)
