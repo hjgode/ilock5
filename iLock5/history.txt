@@ -130,6 +130,9 @@
 	version 5.3.0.0
 		added reg keys and functions for reboot action to enable use of external app
 		
+	version 5.3.0.1
+		added waitforAPIready() (possible lock at cleanboot when started from HKLM\init)
+		changed procEnumWindows (bool performance warning)
 */
 
 

@@ -180,8 +180,8 @@ IDB_BITMAP1             BITMAP                  "bitmap1.bmp"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,3,0,0
- PRODUCTVERSION 5,3,0,0
+ FILEVERSION 5,3,0,1
+ PRODUCTVERSION 5,3,0,1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -197,12 +197,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "iLock5 Application"
-            VALUE "FileVersion", "5, 3, 0, 0"
+            VALUE "FileVersion", "5, 3, 0, 1"
             VALUE "InternalName", "iLock5"
             VALUE "LegalCopyright", "Copyright (C) 2012"
             VALUE "OriginalFilename", "iLock5.exe"
             VALUE "ProductName", "iLock5 Application"
-            VALUE "ProductVersion", "5, 3, 0, 0"
+            VALUE "ProductVersion", "5, 3, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
