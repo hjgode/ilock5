@@ -1,5 +1,7 @@
 // --- nclog.cpp ---
 
+#undef MYDEBUG
+
 //#include "winsock.h"
 #include "winsock2.h"
 #pragma comment (lib, "ws2.lib")
@@ -71,7 +73,7 @@ static bool wsa_init()
 	error:
         if (wsa_socket != INVALID_SOCKET) 
 			closesocket(wsa_socket);
-#ifdef DEBUG 
+#ifdef MYDEBUG 
 			OutputDebugString(TEXT("nclog: TCP/IP Problem"));
 #endif
         return false;
@@ -90,7 +92,7 @@ static void wsa_send(const char *x)
 
         if (SOCKET_ERROR == sendto(wsa_socket,x,strlen(x), 0, (sockaddr*) &sa, sizeof(sa)))
         {
-#ifdef DEBUG
+#ifdef MYDEBUG
         //if (debug_mode) 
 //			OutputDebugString(TEXT("nclog: Send Error"));
 #endif
@@ -219,7 +221,7 @@ void nclog (const wchar_t *fmt, ...)
         WideCharToMultiByte(CP_ACP,0,buf,-1,bufOut,400, NULL, NULL);
 	
 	if(iUseLogging==1){
-#ifdef DEBUG
+#ifdef MYDEBUG
 		wsa_send(bufOut);
 		DEBUGMSG(1, (buf));
 #else
