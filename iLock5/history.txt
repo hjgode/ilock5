@@ -1,3 +1,6 @@
+		5.1.0.3:
+		VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future
+		(until we find the real cause)
 
 /*
 	version 1.0
@@ -133,6 +136,25 @@
 	version 5.3.0.1
 		added waitforAPIready() (possible lock at cleanboot when started from HKLM\init)
 		changed procEnumWindows (bool performance warning)
+	
+	version 5.3.0.2
+		iLock may keep blocked on end after cleanboot, windows stops sending messages
+		to iLock, the progressbar stops (no timer calls), iLock window is disabled
+		==>> DID NOT HELP
+		A DEBUG build works, conditional DEBUG changes:
+			in DEBUG, wsa_send is used
+			in DEBUG, 
+				TIMER4COUNT=3;	//timeout before showing reboot button
+				iUseLogging=1;	//use nclog for logging (with sockets) 
+			LockTaskbar(false);	//in WM_CREATE
+		Added MYDEBUG define and replaced #ifdef DEBUG by #ifdef MYDEBUG, so we get a debug build with no different function
+		
+		removed IDS_VERSION of resources
+		added ver_info to have only ONE source for version number! But as GetVersionFinfo does not work, ver_info.cpp
+		has some default prod name and ver info!
+		
+		VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future
+		(until we find the real cause)
 */
 
 
@@ -167,3 +189,5 @@ REGEDIT4
 "RebootExt"=dword:00000000
 "RebootExtApp"="\Windows\fexplore.exe"
 "RebootExtParms"=""
+
+"UseSocket"=dword:00000000

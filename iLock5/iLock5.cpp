@@ -3,11 +3,16 @@
 /*
 	see history.txt
 */
+
+//custom DEBUG coding?
+#undef MYDEBUG
+
 //disable warnings
 //performance warning
 //#pragma warning( disable : 4800 ) // 4101 )
 
 #include "stdafx.h"
+#include "ver_info.h"
 #include "iLock5.h"
 #include <windows.h>
 #include <commctrl.h>
@@ -15,7 +20,7 @@
 #include "registry.h"
 #include "nclog.h"
 
-#pragma comment (user , "version 5.3.0.0")	//see also iLock5ppc.rc !
+//#pragma comment (user , "version 5.3.0.2")	//see also iLock5ppc.rc !
 
 //fix memory problem on WM5 and later, see http://social.msdn.microsoft.com/forums/en-US/vssmartdevicesnative/thread/e91d845d-d51e-45ad-8acf-737e832c20d0/
 #ifndef TH32CS_SNAPNOHEAPS
@@ -33,7 +38,7 @@
 #undef USESHFULLSCREEN
 
 #define USELOCKDESKTOP
-//#undef USELOCKDESKTOP
+//#undef USELOCKDESKTOP		//test!
 
 //documentation in exe file
 #ifdef USEMENUBAR
@@ -62,6 +67,8 @@
 #endif
 
 #include "sipapi.h"
+
+TCHAR szVersion[MAX_PATH];
 
 #define timer1 1001	//the locker timer
 #define timer2 1002 //this will look for the process and window to wait for
@@ -444,7 +451,7 @@ void ReadRegistry(void)
 		nclog(L"iLock5: RebootExtParms='%s'\r\n", szRebootExtParms);
 	}
 
-#ifdef DEBUG
+#ifdef MYDEBUG
 	TIMER4COUNT=3;
 	iUseLogging=1;
 #endif
@@ -1116,11 +1123,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				LvCol.pszText=L"Item";                     // First Header
 				SendMessage(hProcList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol); // Insert/Show the coloum
 			
-				TCHAR szVersion[MAX_LOADSTRING];
-				if(LoadString(hInst, IDS_VERSION, szVersion, MAX_LOADSTRING)>0)
-					wsprintf(tstr, L"iLock %s started", szVersion);
-				else
-					wsprintf(tstr, L"iLock started");
+				//read productversion from resources!
+				TCHAR szVersionInfo[MAX_PATH];
+				TCHAR szProductName[MAX_PATH];
+				myGetFileVersionInfo(hInst, szVersionInfo);
+				myGetFileProductNameInfo(NULL, szProductName);
+				wsprintf(szVersion, L"%s v%s", szProductName, szVersionInfo);
+
+				wsprintf(tstr, L"iLock %s started", szVersion);
+
 				Add2List(hProcList, tstr);
 				//Add2List(hProcList, L"Waiting for application...");
 				if(App2waitFor!=NULL)
@@ -1134,6 +1145,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetTimer (hWnd, timer1, timer1intervall, NULL) ;  //relock screen all .5 seconds
 			SetTimer (hWnd, timer2, timer2intervall, NULL) ; //refresh process list all 5 seconds
 
+			//create a button for reboot
 			xButton = (screenXmax/2)-(100/2);
 			yButton = 40*(screenYmax/320) + (screenYmax/320)*320/5 + 26;//based on progressbar pos and height
 			hBtnReboot = CreateWindow(
@@ -1342,7 +1354,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				 {
 					case timer1:
 						nclog(L"iLock5: WM_TIMER. Timer1 proc...\r\n");
-#ifdef DEBUG
+#ifdef MYDEBUG
 						LockTaskbar(false);
 #else
 						LockTaskbar(true);
