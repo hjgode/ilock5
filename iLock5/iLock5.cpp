@@ -367,7 +367,7 @@ void ReadRegistry(void)
 	dwVal=60;
 	if(RegReadDword(L"ShowRebootTimeout", &dwVal)==ERROR_SUCCESS)
 	{
-		if(dwVal>0 && dwVal<301)
+		if(dwVal>0 && dwVal<601)
 			TIMER4COUNT=dwVal;
 		else
 			TIMER4COUNT=60;
