@@ -141,6 +141,7 @@
 		iLock may keep blocked on end after cleanboot, windows stops sending messages
 		to iLock, the progressbar stops (no timer calls), iLock window is disabled
 		==>> DID NOT HELP
+		
 		A DEBUG build works, conditional DEBUG changes:
 			in DEBUG, wsa_send is used
 			in DEBUG, 
@@ -155,6 +156,9 @@
 		
 		VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future
 		(until we find the real cause)
+		
+		changed max value for ShowRebootTimeout from 300 to 600
+		see: if(RegReadDword(L"ShowRebootTimeout",...
 */
 
 
