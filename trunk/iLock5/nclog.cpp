@@ -219,6 +219,8 @@ void nclog (const wchar_t *fmt, ...)
 		wsprintf(buf, L"%s", StrW);
 
         WideCharToMultiByte(CP_ACP,0,buf,-1,bufOut,400, NULL, NULL);
+
+		RETAILMSG(1, (buf));	//moved from 1)
 	
 	if(iUseLogging==1){
 #ifdef MYDEBUG
@@ -227,8 +229,7 @@ void nclog (const wchar_t *fmt, ...)
 #else
 		if(bUseSocket)
 			wsa_send(bufOut);
-
-		RETAILMSG(1, (buf));
+		// 1)
 #endif
 		writefile(buf);
 	}//iUseLogging
