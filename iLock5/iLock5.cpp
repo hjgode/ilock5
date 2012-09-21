@@ -15,6 +15,7 @@
 #include "ver_info.h"
 #include "iLock5.h"
 #include <windows.h>
+#include <winver.h>
 #include <commctrl.h>
 #include "locktaskbar.h"
 #include "registry.h"
@@ -480,9 +481,10 @@ extern "C" BOOL IsAPIReady(DWORD hAPI);
 void waitforAPIready(){
 	do{
 		Sleep(1000);
-		DEBUGMSG(1, (L"Waiting for API ready\n"));
+		DEBUGMSG(1, (L"Waiting for API (SH_WMGR, SH_GDI, SH_SHELL) ready...\n"));
 		//repeat until all are true;
 	}while( !IsAPIReady(SH_WMGR) && !IsAPIReady(SH_GDI) && !IsAPIReady(SH_SHELL));
+	DEBUGMSG(1, (L"...done waiting for API ready\n"));
 }
 //######### end wait for API
 

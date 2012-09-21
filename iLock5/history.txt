@@ -1,31 +1,105 @@
-		5.1.0.3:
-		VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future
+/*
+
+iLock5 version history
+
+	in progress		
+		moved RETAILMSG(1, (buf)); outside if(UseLogging) in nclog.cpp. So it is always active.
+		==> tested 3 times with RETAIL build and was OK
+
+		verified: will not hang after cleanboot if used with UseLogging=1
+		
+		//hangs only if error msg "VSTS.exe Error Message" is in background? NO, on second reboot 
+		it does not hang although the error mesg is in background
+		
+		history file has been reversed
+		
+		NOT TRUE:[VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future]
 		(until we find the real cause)
 
-/*
-	version 1.0
-		initial release
-		UseFullScreen is not used!
-		we are always 'fullscreen' but let you view the taskbar
-	version 1.1
-		uncommented code for MaximizeTargetOnExit and KeepLockedAfterExit in WM_DESTROY
-		added AllKeys()
-		added #USEMENUBAR
-		if USELOCKDESKTOP is defined LockDesktop will also lock softkey menu! on exit
-	version 1.2
-		changed access to bmp file to use define ILOCKBMP. iLock5.bmp will now be now be 
-		used instead of iLock.bmp
-		added new settings:
-		UseDesktopLock
-		UseMenuBar
-	version 1.3
-		added "FreeDesktopOnExit" setting and code
-		added "WaitBeforeExit" setting and code
-		added text color registry setting and code
-		added bAdminExit and code
+	version 5.3.0.2
+		iLock may keep blocked on end after cleanboot, windows stops sending messages
+		to iLock, the progressbar stops (no timer calls), iLock window is disabled
+		==>> DID NOT HELP
+		
+		A DEBUG build works, conditional DEBUG changes:
+			in DEBUG, wsa_send is used
+			in DEBUG, 
+				TIMER4COUNT=3;	//timeout before showing reboot button
+				iUseLogging=1;	//use nclog for logging (with sockets) 
+			LockTaskbar(false);	//in WM_CREATE
+		Added MYDEBUG define and replaced #ifdef DEBUG by #ifdef MYDEBUG, so we get a debug build with no different function
+		
+		removed IDS_VERSION of resources
+		added ver_info to have only ONE source for version number! But as GetVersionFinfo does not work, ver_info.cpp
+		has some default prod name and ver info!
+		
+		changed max value for ShowRebootTimeout from 300 to 600
+		see: if(RegReadDword(L"ShowRebootTimeout",...
+		
+	version 5.3.0.1
+		added waitforAPIready() (possible lock at cleanboot when started from HKLM\init)
+		changed procEnumWindows (bool performance warning)
+		
+	version 5.3.0.0
+		added reg keys and functions for reboot action to enable use of external app
+		
+	version 5.2.0.2
+		added DebugMode where iLock does not use SetTopWindow to bring itself to the foreground
+		"DebugMode"=dword:00000000	//default
+		"DebugMode"=dword:00000001	SetTopWindow and other locking without function
+		
+	version 5.2.0.1
+		added UseSocket var (registry), default=1 (disables socket logging)
+		"UseSocket"=dword:00000000
+		disable/enable logging via a socket broadcast
 
-	version 1.4
-		added two check against bAdminExit in WM_DESTROY
+	version 5.2.0.0
+		imported project into VS2008
+		changed code to be HIRES_AWARE (positions and sizes)
+	
+	version 5.1.9.1
+		added KeepUseFullScreenOnExit controlling
+			"KeepUseFullScreenOnExit"="1"
+			if 1, the Taskbar will not be restored
+			if 0, the taskbar will be restored
+			depends on UseFullScreen, which switches HHTaskbar/TitleBar visible	or not
+
+	version 5.1.9.0
+		activated UseFullScreen setting
+			;use full screen, currently not used
+			"UseFullScreen"="1"
+			if 1, taskbar will be hidden
+			if 0, taskbar is visible
+		added global g_hWnd
+		changed HideTaskBar() to resize window
+
+	version 5.1.8.2:
+		changed logging, logging to file is now always in place!
+
+	version 5.1.8.1:
+		changed break in MsgLoop to return 0; (see "//5.1.8.1 return messgage has been processed")
+
+	version 5.1.8.0:
+		added watchdog thread
+
+	version 5.1.7.1:
+		after setting all code to enable logging, now the code also uses the logging facility
+		added TH32CS_SNAPNOHEAPS fix
+
+	version 5.1.7:
+		Added some logging and new registry key "UseLogging":DWORD[0|1] to disable/enable
+		logging
+		nclog.h and nclog.cpp have been extended with nclogEnable(BOOL bEnable) to control
+		logging
+
+		Added define LISTVIEWPAUSES to enable pausing timers for listView clicks
+
+	version 5.1.6:
+		Added timout code that shows a button to enable reboot if target does not start
+		;added to control showing a reboot button after a timeout
+		"ShowRebootTimeout"=60	; // 0 to 300, defaults to 60 seconds
+
+//##############################################################################
 
 	version 1.5 (5.1.5.0)
 		added code to read DBL_CLICK hot spot from registry
@@ -76,89 +150,35 @@
 		"HotSpotX"=dword:00000078
 		;HotSpotY = 160, (DWORD: 10-310)
 		"HotSpotY"=dword:000000A0
-	version 5.1.6:
-		Added timout code that shows a button to enable reboot if target does not start
-		;added to control showing a reboot button after a timeout
-		"ShowRebootTimeout"=60	; // 0 to 300, defaults to 60 seconds
-	version 5.1.7:
-		Added some logging and new registry key "UseLogging":DWORD[0|1] to disable/enable
-		logging
-		nclog.h and nclog.cpp have been extended with nclogEnable(BOOL bEnable) to control
-		logging
 
-		Added define LISTVIEWPAUSES to enable pausing timers for listView clicks
-	version 5.1.7.1:
-		after setting all code to enable logging, now the code also uses the logging facility
-		added TH32CS_SNAPNOHEAPS fix
+	version 1.4
+		added two check against bAdminExit in WM_DESTROY
 
-	version 5.1.8.0:
-		added watchdog thread
+	version 1.3
+		added "FreeDesktopOnExit" setting and code
+		added "WaitBeforeExit" setting and code
+		added text color registry setting and code
+		added bAdminExit and code
 
-	version 5.1.8.1:
-		changed break in MsgLoop to return 0; (see "//5.1.8.1 return messgage has been processed")
+	version 1.2
+		changed access to bmp file to use define ILOCKBMP. iLock5.bmp will now be now be 
+		used instead of iLock.bmp
+		added new settings:
+		UseDesktopLock
+		UseMenuBar
+	version 1.1
+		uncommented code for MaximizeTargetOnExit and KeepLockedAfterExit in WM_DESTROY
+		added AllKeys()
+		added #USEMENUBAR
+		if USELOCKDESKTOP is defined LockDesktop will also lock softkey menu! on exit
+	version 1.0
+		initial release
+		UseFullScreen is not used!
+		we are always 'fullscreen' but let you view the taskbar
+		
+//####################################################################################################
 
-	version 5.1.8.2:
-		changed logging, logging to file is now always in place!
-
-	version 5.1.9.0
-		activated UseFullScreen setting
-			;use full screen, currently not used
-			"UseFullScreen"="1"
-			if 1, taskbar will be hidden
-			if 0, taskbar is visible
-		added global g_hWnd
-		changed HideTaskBar() to resize window
-
-	version 5.1.9.1
-		added KeepUseFullScreenOnExit controlling
-			"KeepUseFullScreenOnExit"="1"
-			if 1, the Taskbar will not be restored
-			if 0, the taskbar will be restored
-			depends on UseFullScreen, which switches HHTaskbar/TitleBar visible	or not
-
-	version 5.2.0.0
-		imported project into VS2008
-		changed code to be HIRES_AWARE (positions and sizes)
 	
-	version 5.2.0.1
-		added UseSocket var (registry), default=1 (disables socket logging)
-		"UseSocket"=dword:00000000
-		disable/enable logging via a socket broadcast
-
-	version 5.2.0.2
-		added DebugMode where iLock does not use SetTopWindow to bring itself to the foreground
-		"DebugMode"=dword:00000000	//default
-		"DebugMode"=dword:00000001	SetTopWindow and other locking without function
-		
-	version 5.3.0.0
-		added reg keys and functions for reboot action to enable use of external app
-		
-	version 5.3.0.1
-		added waitforAPIready() (possible lock at cleanboot when started from HKLM\init)
-		changed procEnumWindows (bool performance warning)
-	
-	version 5.3.0.2
-		iLock may keep blocked on end after cleanboot, windows stops sending messages
-		to iLock, the progressbar stops (no timer calls), iLock window is disabled
-		==>> DID NOT HELP
-		
-		A DEBUG build works, conditional DEBUG changes:
-			in DEBUG, wsa_send is used
-			in DEBUG, 
-				TIMER4COUNT=3;	//timeout before showing reboot button
-				iUseLogging=1;	//use nclog for logging (with sockets) 
-			LockTaskbar(false);	//in WM_CREATE
-		Added MYDEBUG define and replaced #ifdef DEBUG by #ifdef MYDEBUG, so we get a debug build with no different function
-		
-		removed IDS_VERSION of resources
-		added ver_info to have only ONE source for version number! But as GetVersionFinfo does not work, ver_info.cpp
-		has some default prod name and ver info!
-		
-		VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future
-		(until we find the real cause)
-		
-		changed max value for ShowRebootTimeout from 300 to 600
-		see: if(RegReadDword(L"ShowRebootTimeout",...
 */
 
 

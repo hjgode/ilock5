@@ -33,9 +33,19 @@ BOOL myGetFileVersionInfo(HMODULE hLib, TCHAR* szVersion)
 	//GetFileVersionInfoSize = (PFN_GetFileVersionInfoSize) GetProcAddress(hLib1, L"GetFileVersionInfoSize");
 	//#########################
 
-	GetModuleFileName (NULL, strPath, MAX_PATH);
+	if(GetModuleFileName (hLib, strPath, MAX_PATH)==0){
+		DEBUGMSG(1, (L"GetModuleFileName() failed with %i. USING default version number\n", GetLastError())); //1814
+		wsprintf(szVersion, DEFAULT_VERINFO);
+		bRet=FALSE;
+		return bRet;
+	}
 
 	DWORD  verSize   = GetFileVersionInfoSize( strPath, &verHandle);
+	if(verSize==0){
+		DEBUGMSG(1, (L"GetFileVersionInfoSize() failed with %i. USING default version number\n", GetLastError())); //1814
+		wsprintf(szVersion, DEFAULT_VERINFO);
+		bRet=FALSE;
+	}
 
 //	static extern int GetFileVersionInfoSize (string sFileName, out int handle);
 
@@ -63,11 +73,6 @@ BOOL myGetFileVersionInfo(HMODULE hLib, TCHAR* szVersion)
 			}
 		}
 		delete[] verData;
-	}
-	else{
-		DEBUGMSG(1, (L"myGetFileVersionInfo() failed with %i. USING default version number\n", GetLastError())); //1814
-		wsprintf(szVersion, DEFAULT_VERINFO);
-		bRet=FALSE;
 	}
 
 	return bRet;

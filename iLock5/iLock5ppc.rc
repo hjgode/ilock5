@@ -176,6 +176,37 @@ IDB_BITMAP1             BITMAP                  "bitmap1.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "iLock5"
+    IDC_ILOCK5              "ILOCK5"
+    IDS_HELLO               "iLock started! - \nPlease wait..."
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_OK                  "Exit"
+    IDS_HELP                "HELP"
+END
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Sys. Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUSD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Version
 //
 
@@ -194,7 +225,7 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040704b0"
+        BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "iLock5 Application"
             VALUE "FileVersion", "5, 3, 0, 2"
@@ -207,30 +238,11 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x407, 1200
+        VALUE "Translation", 0x0, 1200
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE 
-BEGIN
-    IDS_APP_TITLE           "iLock5"
-    IDC_ILOCK5              "ILOCK5"
-    IDS_HELLO               "iLock started! - \nPlease wait..."
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_OK                  "Exit"
-    IDS_HELP                "HELP"
-END
-
-#endif    // German (Germany) resources
+#endif    // Neutral (Sys. Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
