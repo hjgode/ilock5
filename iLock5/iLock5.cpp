@@ -888,7 +888,7 @@ LRESULT ListProcesses(HWND hList)
 BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 {
 	DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
-	LONG_PTR run = lParam;	//change
+	BOOL run = lParam;	//change
 	if (run==0)
 		return false;
 	TCHAR caption[MAX_PATH];
@@ -900,7 +900,7 @@ BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 	{
 		foundSetupWindow=true;
 		hSetupWindow = hwnd;
-		return true;
+		return FALSE;	//stop enumeration of windows
 	}
 	return true;
 }
@@ -909,9 +909,21 @@ BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 int ShowInstallers()
 {
 	DEBUGMSG(1, (L"ShowInstallers()...\n"));
-	bool run=true;
-	EnumWindows(procEnumWindows, run);
-	if (foundSetupWindow)
+
+	// DID NOT WORK ON CN51 BDU and STOPPED timers working !!!!!
+	//BOOL run=true;
+	//if(EnumWindows(procEnumWindows, run))
+	//	DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
+	//else
+	//	DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
+
+	//changed 27. june 2013
+	TCHAR *setupwindowtext = L"Setup";
+	TCHAR *installwindowtext = L"Installing";
+	hSetupWindow=FindWindow(NULL, setupwindowtext);
+	if(hSetupWindow==NULL)
+		hSetupWindow=FindWindow(NULL, installwindowtext);
+	if (hSetupWindow!=NULL)
 	{
 		SetTopWindow(hSetupWindow);
 		return 1; // found at least one window
@@ -983,6 +995,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	RECT rectScreen;
 	DWORD dwC=0;
+	UINT uResult;               // SetTimer's return value 
 
 	nclog(L"iLock5: Inside MsgLoop\r\n");
     switch (message) 
@@ -1144,8 +1157,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			//Start the timers
 			nclog(L"iLock5: WM_CREATE. Starting timers 1 and 2.\r\n");
-			SetTimer (hWnd, timer1, timer1intervall, NULL) ;  //relock screen all .5 seconds
-			SetTimer (hWnd, timer2, timer2intervall, NULL) ; //refresh process list all 5 seconds
+			uResult = SetTimer (hWnd, timer1, timer1intervall, NULL) ;  //relock screen all .5 seconds
+			if(uResult==0)
+				DEBUGMSG(1, (L"setTimer failed for Timer1: %i\n", GetLastError()));
+			else
+				DEBUGMSG(1, (L"setTimer OK for Timer1: %i\n", uResult));
+
+			uResult = SetTimer (hWnd, timer2, timer2intervall, NULL) ; //refresh process list all 5 seconds
+			if(uResult==0)
+				DEBUGMSG(1, (L"setTimer failed for Timer2: %i\n", GetLastError()));
+			else
+				DEBUGMSG(1, (L"setTimer OK for Timer2: %i\n", uResult));
 
 			//create a button for reboot
 			xButton = (screenXmax/2)-(100/2);
