@@ -16,6 +16,9 @@ iLock5 version history
 		NOT TRUE:[VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future]
 		(until we find the real cause)
 
+	version 5.3.1.0
+		changed ShowInstallers() function to not use EnumWindows function. The call never returned on a CN51 BDU
+		
 	version 5.3.0.2
 		iLock may keep blocked on end after cleanboot, windows stops sending messages
 		to iLock, the progressbar stops (no timer calls), iLock window is disabled
