@@ -887,6 +887,11 @@ LRESULT ListProcesses(HWND hList)
 //======================================================================
 BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 {
+	HWND hWndMain = (HWND)lParam;
+	if(hWndMain==hwnd){
+		return true;	//skip internal window!! or we block WndProc
+		DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window skipped internal main window\n"));
+	}
 	DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
 	BOOL run = lParam;	//change
 	if (run==0)
@@ -894,13 +899,15 @@ BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 	TCHAR caption[MAX_PATH];
 	TCHAR *setupwindowtext = L"Setup";
 	TCHAR *installwindowtext = L"Installing";
-	GetWindowText(hwnd, caption, MAX_PATH);
-	if ( (wcsncmp(caption, setupwindowtext, wcslen(setupwindowtext)) == 0) || 
-		 (wcsncmp(caption, installwindowtext, wcslen(installwindowtext)) == 0) )
-	{
-		foundSetupWindow=true;
-		hSetupWindow = hwnd;
-		return FALSE;	//stop enumeration of windows
+	if(GetWindowText(hwnd, caption, MAX_PATH)>0){	//do not waste time on windows without caption
+		DEBUGMSG(1, (L"\tcaption='%s'\n", caption));
+		if ( (wcsnicmp(caption, setupwindowtext, wcslen(setupwindowtext)) == 0) || 
+			 (wcsnicmp(caption, installwindowtext, wcslen(installwindowtext)) == 0) )
+		{
+			foundSetupWindow=true;
+			hSetupWindow = hwnd;
+			return FALSE;	//stop enumeration of windows
+		}
 	}
 	return true;
 }
@@ -908,21 +915,25 @@ BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 // Look for windows starting with "Installing... or "Setup ..." and let them come to front
 int ShowInstallers()
 {
+	hSetupWindow=NULL;	//reset
 	DEBUGMSG(1, (L"ShowInstallers()...\n"));
 
 	// DID NOT WORK ON CN51 BDU and STOPPED timers working !!!!!
+	// you cannnot call GetWindowText() for the own windows inside enumWindows as WndProc 
+	// is blocked by the WM_timer message call!
 	//BOOL run=true;
-	//if(EnumWindows(procEnumWindows, run))
-	//	DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
-	//else
-	//	DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
+	if(EnumWindows(procEnumWindows, (LPARAM)g_hWnd))
+		DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
+	else
+		DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
 
 	//changed 27. june 2013
-	TCHAR *setupwindowtext = L"Setup";
-	TCHAR *installwindowtext = L"Installing";
-	hSetupWindow=FindWindow(NULL, setupwindowtext);
-	if(hSetupWindow==NULL)
-		hSetupWindow=FindWindow(NULL, installwindowtext);
+	//removed 30. june 2013
+	//TCHAR *setupwindowtext = L"Setup";
+	//TCHAR *installwindowtext = L"Installing";
+	//hSetupWindow=FindWindow(NULL, setupwindowtext);
+	//if(hSetupWindow==NULL)
+	//	hSetupWindow=FindWindow(NULL, installwindowtext);
 	if (hSetupWindow!=NULL)
 	{
 		SetTopWindow(hSetupWindow);
