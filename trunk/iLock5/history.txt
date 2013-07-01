@@ -16,6 +16,11 @@ iLock5 version history
 		NOT TRUE:[VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future]
 		(until we find the real cause)
 
+	version 5.3.1.2
+		enumWindows will now be called within a seprate thread. This thread will be killed if it does not return within 0.8sec.
+		This is a workaround for the blocking of enumWindows on a test device
+		If you have a device with this enumWindows bug, 'Setup' and 'Installing" windows will NOT come to foreground
+		
 	version 5.3.1.1
 		back changed ShowInstallers to use EnumWindows.
 		Just need to ensure that our window is not queried by GetWindowText, as this
