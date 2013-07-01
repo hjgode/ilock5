@@ -1,4 +1,4 @@
-#define DEFAULT_VERINFO L"5.3.0.2"
+#define DEFAULT_VERINFO L"5.3.1.1"
 #define DEFAULT_PRODNAME L"iLock5"
 
 //ver_info.cpp
@@ -14,7 +14,7 @@
 #include "ver_info.h"
 
 BOOL myGetFileVersionInfo(TCHAR* szVersion){
-	return myGetFileVersionInfo(NULL, szVersion);
+	return myGetFileVersionInfo(GetModuleHandle(NULL), szVersion);
 }
 
 BOOL myGetFileVersionInfo(HMODULE hLib, TCHAR* szVersion)
