@@ -888,29 +888,61 @@ LRESULT ListProcesses(HWND hList)
 BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
 {
 	HWND hWndMain = (HWND)lParam;
-	if(hWndMain==hwnd){
-		return true;	//skip internal window!! or we block WndProc
+	if(hWndMain==hwnd)
+	{
 		DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window skipped internal main window\n"));
+		return TRUE;	//skip internal window!! or we block WndProc
 	}
-	DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
-	BOOL run = lParam;	//change
-	if (run==0)
-		return false;
+	else
+		DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
+
 	TCHAR caption[MAX_PATH];
 	TCHAR *setupwindowtext = L"Setup";
 	TCHAR *installwindowtext = L"Installing";
-	if(GetWindowText(hwnd, caption, MAX_PATH)>0){	//do not waste time on windows without caption
+	int iLen = GetWindowText(hwnd, caption, MAX_PATH);
+
+	if(iLen > 0)
+	{	//do not waste time on windows without caption
 		DEBUGMSG(1, (L"\tcaption='%s'\n", caption));
 		if ( (wcsnicmp(caption, setupwindowtext, wcslen(setupwindowtext)) == 0) || 
 			 (wcsnicmp(caption, installwindowtext, wcslen(installwindowtext)) == 0) )
 		{
-			foundSetupWindow=true;
+			foundSetupWindow=TRUE;
 			hSetupWindow = hwnd;
+			DEBUGMSG(1, (L"installer win. Stopping enumWindows...\n"));
 			return FALSE;	//stop enumeration of windows
 		}
+		else
+		{
+			DEBUGMSG(1, (L"no installer win\n"));
+			return TRUE;
+		}
 	}
-	return true;
+	else
+	{
+		DEBUGMSG(1, (L"empty win text\n"));
+		return TRUE;
+	}
 }
+
+HANDLE waitForEnumThreadEvent = CreateEvent(NULL, FALSE, FALSE, L"enumWindowThreadEvent");
+
+DWORD enumWinThread(LPVOID lpVoid){
+	DWORD dwRet=0;
+
+	DEBUGMSG(1, (L"Entering enumWinThread()...\n"));
+
+	if(EnumWindows(procEnumWindows, (LPARAM)g_hWnd))
+		DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
+	else
+		DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
+
+	DEBUGMSG(1, (L"...Exit enumWinThread()\n"));
+	SetEvent(waitForEnumThreadEvent);
+
+	return dwRet;
+}
+
 //======================================================================
 // Look for windows starting with "Installing... or "Setup ..." and let them come to front
 int ShowInstallers()
@@ -921,7 +953,29 @@ int ShowInstallers()
 	// DID NOT WORK ON CN51 BDU and STOPPED timers working !!!!!
 	// you cannnot call GetWindowText() for the own windows inside enumWindows as WndProc 
 	// is blocked by the WM_timer message call!
-	//BOOL run=true;
+	// Unfortunately CN51 BDU still blocks
+
+	// use a thread for enumWindows and try a join within timeout?
+	DWORD dwenumWinThreadID=0;
+	HANDLE hThreadWinEnum = CreateThread(NULL, 0, enumWinThread, &g_hWnd, 0, &dwenumWinThreadID);
+	DWORD dwWaitResult = WaitForSingleObject(waitForEnumThreadEvent, 800);
+	switch(dwWaitResult){
+		case WAIT_OBJECT_0:
+			//OK
+			DEBUGMSG(1, (L"enumWinThread terminated normally\n"));
+			break;
+		case WAIT_TIMEOUT:
+			//failed enumWindows, kill thread
+			
+			if(TerminateThread(hThreadWinEnum, -1))
+				DEBUGMSG(1, (L"killed enumWinThread\n"));
+			else
+				DEBUGMSG(1, (L"killing enumWinThread failed: %i\n", GetLastError()));
+			break;
+	}
+	return 0;
+	//	end thread stuff for blocking enumWindows
+
 	if(EnumWindows(procEnumWindows, (LPARAM)g_hWnd))
 		DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
 	else

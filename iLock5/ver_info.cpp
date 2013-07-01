@@ -1,4 +1,4 @@
-#define DEFAULT_VERINFO L"5.3.1.1"
+#define DEFAULT_VERINFO L"5.3.1.2"
 #define DEFAULT_PRODNAME L"iLock5"
 
 //ver_info.cpp
