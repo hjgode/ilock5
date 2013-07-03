@@ -182,6 +182,12 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	Password		(HWND, UINT, WPARAM, LPARAM);
 
+//######################################################################################################
+void toLower(TCHAR *pStr)
+{
+	while(*pStr++ = _totlower(*pStr));
+}
+
 //======================================================================================================
 BOOL DoReboot(){
 	if(!bRebootExt)
@@ -834,113 +840,48 @@ LRESULT FindProcess(TCHAR * ExeName)
 		return 0; //exe not found
 }
 
-//=========================================================================================
-//
-/*
-LRESULT ListProcesses(HWND hList)
-{
-	if (hList == NULL)
-		return -1; //missing handle to list
-	//create a list of running procs
-	SendMessage(hList, LVM_DELETEALLITEMS , 0, 0); //Clear List
-	LVITEM LvItem;
-	int r=0;
-	TCHAR t[MAX_PATH];
-	
-	//make a snapshot for all processes and find the matching processID
-	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	int i=1;
-	if (hSnap != NULL)
-	{
-	  PROCESSENTRY32 pe;
-	  pe.dwSize = sizeof(PROCESSENTRY32);
-	  if (Process32First(hSnap, &pe))
-	  {
-		do
-		{
-			memset(&LvItem,0,sizeof(LvItem)); // Zero struct's Members
-			//  Setting properties Of members:
-			LvItem.mask=LVIF_TEXT;   // Text Style
-			LvItem.cchTextMax = MAX_PATH; // Max size of test
-			LvItem.iItem=i;          // choose item  
-			LvItem.iSubItem=0;       // Put in first coluom
-			wsprintf(t, L"%0x->%s", pe.th32ProcessID, pe.szExeFile);
-			LvItem.pszText = t; //pe.szExeFile; // Text to display (can be from a char variable) (Items)
-			SendMessage(hList,LVM_INSERTITEM,0,(LPARAM)&LvItem); // Send info to the Listview
-			i++;
-			//check if target application is running
-			if (wcsicmp(L"evm.exe", pe.szExeFile)==0)
-			{
-				bAppIsRunning=true;
-			}
-			//======================================
-		} while (Process32Next(hSnap, &pe));
-	  }//processFirst
-	}//hSnap
-	CloseToolhelp32Snapshot(hSnap);
-
-
-	return 0;
-}
-*/
 //======================================================================
-//======================================================================
-BOOL CALLBACK procEnumWindows(HWND hwnd, LPARAM lParam) //find window for PID
-{
-	HWND hWndMain = (HWND)lParam;
-	if(hWndMain==hwnd)
-	{
-		DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window skipped internal main window\n"));
-		return TRUE;	//skip internal window!! or we block WndProc
-	}
-	else
-		DEBUGMSG(1, (L"Looking for 'Installing' and 'Setup' window...\n"));
+TCHAR caption[MAX_PATH];
+wchar_t* pCaption = caption;
 
-	TCHAR caption[MAX_PATH];
-	TCHAR *setupwindowtext = L"Setup";
-	TCHAR *installwindowtext = L"Installing";
-	int iLen = GetWindowText(hwnd, caption, MAX_PATH);
+TCHAR classname[MAX_PATH];
+wchar_t* pClassname = classname;
 
-	if(iLen > 0)
-	{	//do not waste time on windows without caption
-		DEBUGMSG(1, (L"\tcaption='%s'\n", caption));
-		if ( (wcsnicmp(caption, setupwindowtext, wcslen(setupwindowtext)) == 0) || 
-			 (wcsnicmp(caption, installwindowtext, wcslen(installwindowtext)) == 0) )
-		{
-			foundSetupWindow=TRUE;
-			hSetupWindow = hwnd;
-			DEBUGMSG(1, (L"installer win. Stopping enumWindows...\n"));
-			return FALSE;	//stop enumeration of windows
-		}
-		else
-		{
-			DEBUGMSG(1, (L"no installer win\n"));
+TCHAR *setupwindowtext = L"setup";
+TCHAR *installwindowtext = L"installing";
+TCHAR *showwintext = L"showwin";
+
+TCHAR* szInstallerTexts[] = { L"setup", L"installing", L"showwin", NULL };
+
+BOOL isSetupWindow(TCHAR* szClass, TCHAR* szCaption, HWND hwndTest){
+	toLower(szCaption);
+	toLower(szClass);
+	int i=0;
+	do{
+		if( wcsstr(szCaption, szInstallerTexts[i])!= NULL || 
+			wcsstr(szClass, szInstallerTexts[i]) != NULL
+			){
 			return TRUE;
 		}
-	}
-	else
-	{
-		DEBUGMSG(1, (L"empty win text\n"));
-		return TRUE;
-	}
+		i++;
+	}while(szInstallerTexts[i]!=NULL);
+	return NULL;
 }
 
-HANDLE waitForEnumThreadEvent = CreateEvent(NULL, FALSE, FALSE, L"enumWindowThreadEvent");
-
-DWORD enumWinThread(LPVOID lpVoid){
-	DWORD dwRet=0;
-
-	DEBUGMSG(1, (L"Entering enumWinThread()...\n"));
-
-	if(EnumWindows(procEnumWindows, (LPARAM)g_hWnd))
-		DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
-	else
-		DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
-
-	DEBUGMSG(1, (L"...Exit enumWinThread()\n"));
-	SetEvent(waitForEnumThreadEvent);
-
-	return dwRet;
+BOOL CALLBACK EnumWindowsProc2(HWND hwnd, LPARAM lParam)
+{
+	//TCHAR class_name[MAX_PATH];
+	//TCHAR title[MAX_PATH];
+	GetClassName(hwnd, classname, MAX_PATH);
+	GetWindowText(hwnd, caption, MAX_PATH);
+    DEBUGMSG(1, (L"Window title: '%s'\n", caption));
+    DEBUGMSG(1, (L"Class name: '%s'\n",classname));
+	if(isSetupWindow(classname, caption, hwnd)){
+		hSetupWindow=hwnd;
+		DEBUGMSG(1, (L"### found installer ###\n"));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 //======================================================================
@@ -950,50 +891,13 @@ int ShowInstallers()
 	hSetupWindow=NULL;	//reset
 	DEBUGMSG(1, (L"ShowInstallers()...\n"));
 
-	// DID NOT WORK ON CN51 BDU and STOPPED timers working !!!!!
-	// you cannnot call GetWindowText() for the own windows inside enumWindows as WndProc 
-	// is blocked by the WM_timer message call!
-	// Unfortunately CN51 BDU still blocks
-
-	// use a thread for enumWindows and try a join within timeout?
-	DWORD dwenumWinThreadID=0;
-	HANDLE hThreadWinEnum = CreateThread(NULL, 0, enumWinThread, &g_hWnd, 0, &dwenumWinThreadID);
-	DWORD dwWaitResult = WaitForSingleObject(waitForEnumThreadEvent, 800);
-	switch(dwWaitResult){
-		case WAIT_OBJECT_0:
-			//OK
-			DEBUGMSG(1, (L"enumWinThread terminated normally\n"));
-			break;
-		case WAIT_TIMEOUT:
-			//failed enumWindows, kill thread
-			
-			if(TerminateThread(hThreadWinEnum, -1))
-				DEBUGMSG(1, (L"killed enumWinThread\n"));
-			else
-				DEBUGMSG(1, (L"killing enumWinThread failed: %i\n", GetLastError()));
-			break;
-	}
-	return 0;
-	//	end thread stuff for blocking enumWindows
-
-	if(EnumWindows(procEnumWindows, (LPARAM)g_hWnd))
-		DEBUGMSG(1, (L"\tEnumWindows() OK\n"));
-	else
-		DEBUGMSG(1, (L"\tEnumWindows() failed: %i\n", GetLastError()));
-
-	//changed 27. june 2013
-	//removed 30. june 2013
-	//TCHAR *setupwindowtext = L"Setup";
-	//TCHAR *installwindowtext = L"Installing";
-	//hSetupWindow=FindWindow(NULL, setupwindowtext);
-	//if(hSetupWindow==NULL)
-	//	hSetupWindow=FindWindow(NULL, installwindowtext);
-	if (hSetupWindow!=NULL)
-	{
+	EnumWindows(EnumWindowsProc2, NULL);
+	if(hSetupWindow!=NULL){
 		SetTopWindow(hSetupWindow);
-		return 1; // found at least one window
+		return 1;
 	}
 	return 0;
+
 }
 
 RECT * getScreenSize(RECT * rect){

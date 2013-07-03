@@ -13,9 +13,11 @@ iLock5 version history
 		
 		history file has been reversed
 		
-		NOT TRUE:[VERFIED: the same executable will block, if compiled with release settings, so we will use the debug builds in future]
-		(until we find the real cause)
-
+	version 5.3.2.0
+		enumWindows cleaned up, new EnumWindowsProc2
+		add new function isSetupWindow(), moved some vars to global scope
+		code cleanup
+		
 	version 5.3.1.2
 		enumWindows will now be called within a seprate thread. This thread will be killed if it does not return within 0.8sec.
 		This is a workaround for the blocking of enumWindows on a test device

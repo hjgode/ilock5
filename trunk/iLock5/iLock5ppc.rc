@@ -210,37 +210,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 // Version
 //
 
- VERSIONINFO
- FILEVERSION 5,3,1,2
- PRODUCTVERSION 5,3,1,2
- FILEFLAGSMASK 0x17L
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "000004b0"
-        BEGIN
-            VALUE "FileDescription", "iLock5 Application"
-            VALUE "FileVersion", "5, 3, 1, 2"
-            VALUE "InternalName", "iLock5"
-            VALUE "LegalCopyright", "Copyright (C) 2012"
-            VALUE "OriginalFilename", "iLock5.exe"
-            VALUE "ProductName", "iLock5 Application"
-            VALUE "ProductVersion", "5, 3, 1, 2"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x0, 1200
-    END
-END
 
 #endif    // Neutral (Sys. Default) resources
 /////////////////////////////////////////////////////////////////////////////
