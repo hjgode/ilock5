@@ -1,0 +1,1 @@
+windows mobile tool to lock screen until another app has started up
